@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+train-images-idx3-ubyte
+test_model.py
