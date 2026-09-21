@@ -1,16 +1,58 @@
 from fastapi import FastAPI
-import base64
 import io
 from PIL import Image
 from fastapi.responses import FileResponse
 from model import predict
 import numpy as np
+import struct
+import random
+import base64
 
 app = FastAPI()
 
 @app.get("/")
 def home():
     return FileResponse("index.html")
+
+with open("t10k-images.idx3-ubyte", "rb") as f:
+    magic_number, num_images, rows, cols = struct.unpack(
+        ">IIII", f.read(16)
+    )
+
+    mnist_images = f.read()
+
+@app.get("/random-images")
+def random_images():
+
+    images = []
+
+    for _ in range(10):
+
+        index = random.randrange(num_images)
+
+        start = index * rows * cols
+        end = start + rows * cols
+
+        pixels = mnist_images[start:end]
+
+        image = Image.frombytes(
+            "L",
+            (cols, rows),
+            pixels
+        )
+
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+
+        image_base64 = base64.b64encode(
+            buffer.getvalue()
+        ).decode("utf-8")
+
+        images.append(
+            f"data:image/png;base64,{image_base64}"
+        )
+
+    return {"images": images}
 
 @app.post("/predict")
 def predict_digit(data: dict) :

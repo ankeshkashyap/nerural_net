@@ -32,6 +32,33 @@
             margin-top: 20px;
             font-size: 20px;
         }
+
+        #imageChoices {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #imageChoices img {
+            width: 60px;
+            height: 60px;
+            image-rendering: pixelated;
+            border: 2px solid #333;
+            cursor: pointer;
+            background: black;
+        }
+
+        #notice {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        #imageChoices img:hover {
+            border-color: lime;
+        }
     </style>
 </head>
 
@@ -45,12 +72,21 @@
 
     <button id="clear">Clear</button>
     <button id="predict">Predict</button>
+    <button id="chooseImage">Choose Image</button>
 
+    <div id="notice">
+        Note: Hand-drawn digits may have lower prediction accuracy.
+    </div>
+
+    <div id="imageChoices"></div>
+    
     <div id="result">
         Prediction: -
         <br>
         Confidence: -
     </div>
+
+    
 
     <script>
         const canvas = document.getElementById("canvas");
@@ -101,15 +137,56 @@
             drawing = false;
         });
 
+        const chooseImageButton = document.getElementById("chooseImage");
+        const imageChoices = document.getElementById("imageChoices");
+
+        chooseImageButton.addEventListener("click", async () => {
+
+            imageChoices.innerHTML = "";
+
+            const response = await fetch("/random-images");
+            const data = await response.json();
+
+            data.images.forEach((imageData) => {
+
+                const img = document.createElement("img");
+
+                img.src = imageData;
+
+                img.addEventListener("click", () => {
+
+                    const selectedImage = new Image();
+
+                    selectedImage.onload = () => {
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        ctx.drawImage(
+                            selectedImage,
+                            0,
+                            0,
+                            canvas.width,
+                            canvas.height
+                        );
+                    };
+
+                    selectedImage.src = imageData;
+                });
+
+                imageChoices.appendChild(img);
+            });
+        });
 
         document.getElementById("clear").addEventListener("click", () => {
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.strokeStyle = "white";
+            imageChoices.innerHTML = "";
 
             document.getElementById("result").innerHTML =
                 "Prediction: -<br>Confidence: -";
+            
         });
 
 
